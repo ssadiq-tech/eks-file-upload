@@ -1,0 +1,114 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-config
+  namespace: otel
+data:
+  config.yaml: |
+    extensions:
+      sigv4auth:
+        service: aps
+        region: eu-west-1
+
+    receivers:
+      otlp:
+        protocols:
+          grpc: {}
+          http: {}
+
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: 'kube-state-metrics'
+              static_configs:
+                - targets: ['kube-state-metrics.otel.svc.cluster.local:8080']
+              scrape_interval: 30s
+
+            - job_name: 'node-exporter'
+              static_configs:
+                - targets: ['prometheus-node-exporter.otel.svc.cluster.local:9100']
+              scrape_interval: 30s      
+
+      k8s_cluster:
+        collection_interval: 30s
+        auth_type: serviceAccount
+
+      k8s_events:
+        auth_type: serviceAccount
+
+      hostmetrics:
+        collection_interval: 30s
+        scrapers:
+          cpu: {}
+          memory: {}
+          disk: {}
+          filesystem: {}
+          load: {}
+          network: {}
+
+    processors:
+      batch: {}
+
+      resourcedetection/system:
+        detectors: [env, system, eks]
+        timeout: 2s
+        override: false
+
+      resource:
+        attributes:
+          - action: insert
+            key: env.name
+            value: ${env:ENV_NAME}
+          - action: insert
+            key: cluster
+            value: ${env:CLUSTER_NAME}
+
+      k8sattributes:
+        auth_type: serviceAccount
+        passthrough: true
+        extract:
+          metadata:
+            - k8s.pod.name
+            - k8s.pod.uid
+            - k8s.container.name
+            - k8s.namespace.name
+            - k8s.node.name
+            - k8s.pod.start_time
+
+    exporters:
+      awscloudwatchlogs:
+        region: eu-west-1
+        log_group_name: /aws/otel/logs
+        log_stream_name: otel-logs
+
+      awsemf:
+        region: eu-west-1
+        namespace: OtelMetrics
+        dimension_rollup_option: NoDimensionRollup
+        resource_to_telemetry_conversion:
+          enabled: true
+
+      awsxray:
+        region: eu-west-1
+
+      debug:
+        verbosity: detailed
+
+    service:
+      extensions: [sigv4auth]
+      pipelines:
+
+        metrics:
+          receivers: [prometheus,hostmetrics]
+          processors: [batch, resourcedetection/system, resource, k8sattributes]
+          exporters: [awsemf]
+
+        logs/pod:
+          receivers: [otlp]
+          processors: [batch, resource, k8sattributes]
+          exporters: [awscloudwatchlogs]
+
+        logs/cluster:
+          receivers: [otlp, k8s_events]
+          processors: [batch, resource, k8sattributes]
+          exporters: [awscloudwatchlogs]
