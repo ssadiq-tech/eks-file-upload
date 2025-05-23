@@ -15,7 +15,7 @@ export class ExistingEksStack extends cdk.Stack {
     // Import existing cluster
     const cluster = eks.Cluster.fromClusterAttributes(this, 'AdotEksCluster', {
       clusterName: 'adot-eks-clusters',
-      kubectlRoleArn: `arn:aws:iam::131332286832:role/kubectlrole`,
+      kubectlRoleArn: `arn:aws:iam::131332286832:role/eksctl-adot-eks-clusters-cluster-ServiceRole-H1pnlT7iEYi4`,
       openIdConnectProvider: eks.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
         this,
         'ClusterOIDCProvider',
