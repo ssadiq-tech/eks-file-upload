@@ -32,9 +32,6 @@ jobs:
         npm install -g aws-cdk
         npm ci
 
-    - name: Bootstrap CDK (if needed)
-      run: npx cdk bootstrap aws://131332286832/us-east-1
-
     - name: Install Kubernetes tools
       run: |
         # Install kubectl
@@ -51,6 +48,9 @@ jobs:
         role-to-assume: arn:aws:iam::131332286832:role/githubdeployrole
         aws-region: us-east-1
         audience: sts.amazonaws.com
+    
+    - name: Bootstrap CDK (if needed)
+      run: npx cdk bootstrap aws://131332286832/us-east-1
 
     - name: Configure kubeconfig
       run: |
