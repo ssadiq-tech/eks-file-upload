@@ -25,7 +25,10 @@ jobs:
       with:
         node-version: '20'  # Recommended version for CDK
         cache: 'npm'
-
+    - name: Install Python dependencies
+      run: |
+          pip install -r requirements.txt
+          
     - name: Install CDK and dependencies
       run: |
         npm install -g aws-cdk
