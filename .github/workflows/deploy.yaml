@@ -1,0 +1,75 @@
+name: Deploy to EKS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  CLUSTER_NAME: adot-eks-clusters
+  NAMESPACE: aws-otel-eks
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for OIDC authentication
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4  # Updated to latest version
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4  # Updated to v4
+      with:
+        role-to-assume: arn:aws:iam::131332286832:role/githubdeployrole
+        aws-region: us-east-1
+        role-session-name: githubdeployrole
+        audience: sts.amazonaws.com
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'  # Recommended version for CDK
+        cache: 'npm'
+
+    - name: Install CDK and dependencies
+      run: |
+        npm install -g aws-cdk
+        npm ci
+
+    - name: Bootstrap CDK (if needed)
+      run: npx cdk bootstrap aws://131332286832/us-east-1
+
+    - name: Install Kubernetes tools
+      run: |
+        # Install kubectl
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/
+        
+        # Install aws-iam-authenticator (not needed for EKS since v1.23, using aws cli instead)
+        echo "AWS CLI now handles EKS authentication natively"
+
+    - name: Configure kubeconfig
+      run: |
+        aws eks update-kubeconfig --region us-east-1 --name eksdemo
+
+    - name: CDK Synth and Deploy
+      run: |
+        npx cdk synth
+        npx cdk deploy --require-approval never
+
+    - name: Apply Kubernetes manifests
+      run: |
+        # Verify cluster access first
+        kubectl cluster-info
+        
+        # Apply manifests with namespace specification
+        if [ -d "manifests/" ]; then
+          kubectl apply -f manifests/ -n aws-otel-eks
+        else
+          echo "No manifests directory found"
+        fi
