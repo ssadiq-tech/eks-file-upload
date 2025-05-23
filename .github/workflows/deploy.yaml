@@ -58,6 +58,15 @@ jobs:
       run: |
         aws eks update-kubeconfig --region us-east-1 --name adot-eks-clusters
 
+    - name: CDK Synth
+      run: npx cdk synth
+
+    - name: CDK Deploy
+      run: npx cdk deploy --require-approval never
+      env:
+        OIDC_PROVIDER_ARN: arn:aws:iam::131332286832:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/883752FFF3EFBDB7B44543F17F0C3358
+        KUBECTL_ROLE_ARN: arn:aws:iam::131332286832:role/kubectlrole
+
     - name: Apply Kubernetes manifests
       run: |
         # Verify cluster access first
