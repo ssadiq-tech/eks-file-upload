@@ -54,7 +54,7 @@ jobs:
 
     - name: Configure kubeconfig
       run: |
-        aws eks update-kubeconfig --region us-east-1 --name eksdemo
+        aws eks update-kubeconfig --region us-east-1 --name adot-eks-clusters
 
     - name: CDK Synth and Deploy
       run: |
