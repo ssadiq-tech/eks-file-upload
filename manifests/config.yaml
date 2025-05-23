@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: otel-config
-  namespace: otel
+  namespace: aws-otel-eks
 data:
   config.yaml: |
     extensions:
