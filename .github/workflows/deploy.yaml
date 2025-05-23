@@ -56,11 +56,6 @@ jobs:
       run: |
         aws eks update-kubeconfig --region us-east-1 --name adot-eks-clusters
 
-    - name: CDK Synth and Deploy
-      run: |
-        npx cdk synth
-        npx cdk deploy --require-approval never
-
     - name: Apply Kubernetes manifests
       run: |
         # Verify cluster access first
