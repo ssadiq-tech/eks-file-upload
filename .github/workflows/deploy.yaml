@@ -21,13 +21,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4  # Updated to latest version
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v3
-      with:
-        role-to-assume: arn:aws:iam::131332286832:role/githubdeployrole
-        aws-region: us-east-1
-        audience: sts.amazonaws.com
-
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -51,6 +44,13 @@ jobs:
         
         # Install aws-iam-authenticator (not needed for EKS since v1.23, using aws cli instead)
         echo "AWS CLI now handles EKS authentication natively"
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        role-to-assume: arn:aws:iam::131332286832:role/githubdeployrole
+        aws-region: us-east-1
+        audience: sts.amazonaws.com
 
     - name: Configure kubeconfig
       run: |
