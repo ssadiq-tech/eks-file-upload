@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-
 env:
   AWS_REGION: us-east-1
   CLUSTER_NAME: adot-eks-clusters
